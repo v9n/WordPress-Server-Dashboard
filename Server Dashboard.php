@@ -11,14 +11,49 @@ Domain Path: /languages
  */
 namespace AX\StatBoard;
 
-use Ax\StatBoard\Widget;
+use AX\StatBoard\Widget;
 
 require_once plugin_dir_path( __FILE__ ) . '/widget.php' ;
+require_once plugin_dir_path( __FILE__ ) . '/widget/provider.php' ;
 
 class Dashboard {
   protected static $_instance=NULL;
+  protected $_dashboard_widget = array();
 
   function __construct() {
+    $this->_dashboard_widget = array(
+      'server',
+      //'hello',
+      'disk',
+      'ram',
+  
+  //const DASHBOARD_WIDGET_SERVER_LOAD    = 20;
+
+  //const DASHBOARD_WIDGET_MEMORY         = 30;
+
+  //const DASHBOARD_WIDGET_DISK_IO        = 41;
+  
+  //const DASHBOARD_WIDGET_SOFTWARE       = 50;
+  
+  //const DASHBOARD_WIDGET_SERVER_IP      = 60;
+
+  //const DASHBOARD_WIDGET_INTERNET_SPEED = 70;
+  //const DASHBOARD_WIDGET_NETWORK_IO     = 71;
+  
+  //const DASHBOARD_WIDGET_PROCESS        = 80;
+    );
+    foreach ($this->_dashboard_widget as $item) {
+      if (!file_exists(plugin_dir_path( __FILE__ ) . '/widget/' . $item . '.php')) {
+        continue;
+      }
+      require_once plugin_dir_path( __FILE__ ) . '/widget/' . $item . '.php' ;
+      $classname = 'AX\\StatBoard\\Widget\\' . ucwords($item);
+      //$class = new \ReflectionClass('ReflectionClass');
+      //$p = $class->newInstance($classname);
+      $p = new $classname();
+      Widget::instance()->add_provider($item, $p);
+      //Widget::instance()->add_provider($item, new Hello());
+    }
   }
 
   /**
@@ -34,6 +69,7 @@ class Dashboard {
   public function run() {
     add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
     add_action( 'admin_enqueue_scripts', array($this, 'add_asset'));
+    add_action('wp_footer', array($this, 'footer'));
   }
 
   function remove_dashboard_widgets() {
@@ -42,42 +78,11 @@ class Dashboard {
 
   function add_dashboard_widgets() {
     syslog(LOG_DEBUG, "Run"); 
-
-    wp_add_dashboard_widget(
-        'hello_world_dashboard_widget', // A Slug to identify this widget
-                 'Hello World', //Widget title
-                 function () {
-                   echo <<<'EOD'
-Hey, I'm the body of widget. Thanks for bring me to the life.
-      <div id="hello_piechart">
-      </div>
-      <script type="text/javascript">
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-        var data = google.visualization.arrayToDataTable([
-          ['Task', 'Hours per Day'],
-          ['Work',     11],
-          ['Eat',      2],
-          ['Commute',  2],
-          ['Watch TV', 2],
-          ['Sleep',    7]
-        ]);
-
-        var options = {
-          title: 'Sample Pie Chart',
-          is3D: true,
-        };
-
-        var chart = new google.visualization.PieChart(document.getElementById('hello_piechart'));
-        chart.draw(data, options);
-      }
-    </script>
-EOD;
-                  } //function to render content of widget, I'm using a closure here
-      );	
-
+    $widget = Widget::instance();
+    foreach ($widget->get_provider() as $name=>$provider) {
+      $widget->register($name);
     }
+  }
 
   /**
    * Add java script
@@ -86,33 +91,14 @@ EOD;
     //wp_enqueue_style( 'style-name', get_stylesheet_uri() );
     syslog(LOG_DEBUG, "Loaded"); 
     wp_enqueue_script( 'google-chart', 'https://www.google.com/jsapi' );
-
-
-    //$df = `df -h`;
-    //$df = explode("\n", $df);
-    //if (is_array($df) && count($df)>=2) {
-      //array_shift($df); //Get rid the first line
-      //$df = array_map(function ($line) {
-        //if (empty($line)) {
-          //return NULL;
-        //}
-        //$segment=preg_split('/\s+/', $line);
-        
-        //return array(
-          //'filesystem' => $segment[0],
-          //'size' => $segment[1],
-          //'used' => $segment[2],
-          //'available' => $segment[3],
-          //'use_percent' => $segment[4],
-        //);
-      //}, $df);
-      //var_dump($df);
-    //}
-
-
+    wp_enqueue_script( 'plugin_dir_url', plugin_dir_url(__FILE__) . '/loader.js');
   }
 
-
+  function footer() {
+    echo '
+      <script>google.load("visualization", "1", {packages:["corechart"]})</script>
+      ';
+  }
 }
 
 Dashboard::instance()->run();
