@@ -1,12 +1,12 @@
 <?php
 namespace AX\StatBoard\Widget;
 
-class Ram implements Provider {
+class Cpuload implements Provider {
   function __construct() {
   }
 
   public function get_title() {
-    return "Ram Usage";
+    return "CPU Load";
   }
 
   public function get_content() {
@@ -25,9 +25,9 @@ class Ram implements Provider {
       //$data[$item['type']][] = array('Type', 'Space');
       $data[$item['type']] = array(
         array('Type', 'Space'),
-          array('Free', intval($item['free'])),
-          array('Used', intval($item['used'])),
-        );
+        array('Free', intval($item['free'])),
+        array('Used', intval($item['used'])),
+      );
 
       $data[$item['type']]   =  json_encode($data[$item['type']]);
     }
@@ -51,29 +51,32 @@ class Ram implements Provider {
     </script>
 EOD;
   }
-
+  
+  /**
+   * http://stackoverflow.com/questions/11987495/linux-proc-loadavg
+   *
+   */
   function get_metric() {
-    $df = `free -m`;
-    $df = explode("\n", $df);
-    if (is_array($df) && count($df)>=2) {
-      array_shift($df); //Get rid the first line
-      
-      $df = array_map(function ($line) {
-        if (empty($line)) {
-          return NULL;
-        }
-        $segment=preg_split('/\s+/', $line);
+    ('/bin/grep -c ^processor /proc/cpuinfo', $resultNumberOfCores);
+    $numberOfCores = $resultNumberOfCores[0];
+  
+    exec(
+      '/bin/cat /proc/loadavg | /usr/bin/awk \'{print $1","$2","$3}\'',
+      $resultLoadAvg
+    );
+    $loadAvg = explode(',', $resultLoadAvg[0]);
 
-        return array(
-          'type' => trim($segment[0]," :"),
-          'total' => $segment[1],
-          'used' => $segment[2],
-          'free' => $segment[3],
-        );
-      }, $df);
-      return $df;
-    }
-    return false;
+    header('Content-Type: application/json; charset=UTF-8');
+    echo json_encode(
+      array_map(
+        function ($value, $numberOfCores) {
+          return array($value, (int)($value * 100 / $numberOfCores));
+        },
+          $loadAvg,
+          array_fill(0, count($loadAvg), $numberOfCores)
+        )
+      );
+
   }
 
 }

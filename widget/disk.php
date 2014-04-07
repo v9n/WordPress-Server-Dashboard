@@ -4,11 +4,6 @@ namespace AX\StatBoard\Widget;
 class Disk implements Provider {
   function __construct() {
   }
-
-  function getSlugId() {
-    return "Disk";
-  }
-
   public function get_title() {
     return "Disk Usage";
   }
