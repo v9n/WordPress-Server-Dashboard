@@ -13,10 +13,11 @@ class Server implements Provider {
   public function get_content() {
     $server = $this->get_metric();
     echo <<<EOD
-    <strong>Core</strong>&nbsp; {$server['core']}<br />
-    <strong>Hostname</strong>&nbsp;{$server['hostname']}<br />
-    <strong>OS</strong> {$server['os']}<br />
-    <strong>Uptime</strong> {$server['uptime']}<br />
+    <strong>Ip Address</strong>&nbsp;{$server['ip']}<br>
+    <strong>Number of Core</strong>&nbsp; {$server['core']}<br>
+    <strong>Hostname</strong>&nbsp;{$server['hostname']}<br>
+    <strong>OS</strong> {$server['os']}<br>
+    <strong>Uptime</strong> {$server['uptime']}<br>
 EOD;
   }
   
@@ -36,6 +37,10 @@ EOD;
     
     $now = new DateTime("now");
     $server['uptime'] = $now->diff(new DateTime("@$total_uptime_sec"))->format('%a days, %h hours, %i minutes and %s seconds');
+
+    // Get the external ip with ifconfig.me, a website that show you ip address in plaintext
+    // when sending request with curl header
+    $server['ip'] = `curl ifconfig.me`;
 
     return $server;
   }

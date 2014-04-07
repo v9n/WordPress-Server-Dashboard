@@ -48,14 +48,18 @@ class Dashboard {
       'ram',
       
       'disk',
-      'diskio',
-
       'software',
+      
+      'process',
+
       'ethernet',
+
+
+
+      'diskio',
       
       'internetspeed',
       'networkio',
-      'process',
     );
 
     foreach ($this->_dashboard_widget as $item) {
