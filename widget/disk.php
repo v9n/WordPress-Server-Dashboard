@@ -14,33 +14,49 @@ class Disk implements Provider {
       array('Disk', 'Space')
     );
 
-    $disk_block = array();
     $disk_container = array();
+    $data_partition = array(
+      array('Filesystem', 'Free(GB)', 'Used(GB)')
+    );    
     foreach ($metric as $disk) {
       $size = intval($disk['size']);
+      if ('M' == substr($disk['size'], -1)) {
+        $size = round($size / 1024, 2);
+      }
+      $used = intval($disk['used']);
+      if ('M' == substr($disk['used'], -1)) {
+        $used = round($used / 1024, 2);
+      }
+
       if (empty($size)) {
         continue;
       }
       $data[] = array($disk['filesystem'], $size);
-      $disk_container[] = '';
-
+      $data_partition[] = array($disk['filesystem'], $size - $used, $used);
     }
-    $disk_block = '';
     $data = json_encode($data);
+    $data_partition = json_encode($data_partition);
+
     echo <<<EOD
       <div id="widget_disk_usage"></div>
-      {$disk_block}
+      <div id="widget_disk_partion"></div>
       <script type="text/javascript">
       google.load("visualization", "1", {packages:["corechart"]});
       google.setOnLoadCallback(function () {
         var data = google.visualization.arrayToDataTable({$data});
-
         var options = {
           is3D: true,
         };
-
         var chart = new google.visualization.PieChart(document.getElementById('widget_disk_usage'));
         chart.draw(data, options);
+
+        var data2 = google.visualization.arrayToDataTable({$data_partition});
+        var options2 = {
+          isStacked: true
+        };
+        var chart2 = new google.visualization.ColumnChart(document.getElementById('widget_disk_partion'));
+        chart2.draw(data2, options2);
+
       })        
     </script>
 EOD;

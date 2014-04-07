@@ -44,22 +44,14 @@ class Dashboard {
     $this->_dashboard_widget = array(
       'server',
       'cpuload',
-
       'ram',
-      
       'disk',
       'software',
-      
       'process',
-
       'ethernet',
 
-
-
-      'diskio',
-      
-      'internetspeed',
       'networkio',
+      //'diskio',
     );
 
     foreach ($this->_dashboard_widget as $item) {
