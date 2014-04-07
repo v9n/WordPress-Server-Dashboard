@@ -10,71 +10,44 @@ class Cpuload implements Provider {
   }
 
   public function get_content() {
-    $metric = $this->get_metric();
-    $data = array(
-    );
-
-    foreach ($metric as $item) {
-      if ($item['type'] != 'Mem' && $item['type'] != 'Swap') {
-        continue;
-      }
-      if ( 0 == ($item['free'] + $item['used'])) {
-        continue;
-      }
-
-      //$data[$item['type']][] = array('Type', 'Space');
-      $data[$item['type']] = array(
-        array('Type', 'Space'),
-        array('Free', intval($item['free'])),
-        array('Used', intval($item['used'])),
-      );
-
-      $data[$item['type']]   =  json_encode($data[$item['type']]);
+    $metrics = $this->get_metric();
+    if (!$metrics) {
+      return false;
     }
-    //$data['Mem'] = json_encode($data['Mem']);
-    //$data['Swap'] = json_encode($data['Swap']);
-    echo <<<EOD
-      <div id="widget_ram_usage"></div>
-      <div id="widget_swap_usage"></div>
-      <script type="text/javascript">
-      google.load("visualization", "1", {packages:["corechart"]});
-      google.setOnLoadCallback(function () {
-        var data = google.visualization.arrayToDataTable({$data['Mem']});
+    $html = '<table class="wp-list-table widefat"><thead><tr>
+      <th>1 min</th>
+      <th>5 min</th>
+      <th>15 min</th>
+      </tr></thead><tbody><tr>
+';
+    foreach ($metrics as $metric) {
+      $html .= '<td>';
+      $html .= "{$metric[0]}%<br>{$metric[1]}";
+      $html .= '</td>';
 
-        var options = {
-          is3D: true,
-        };
-
-        var chart = new google.visualization.PieChart(document.getElementById('widget_ram_usage'));
-        chart.draw(data, options);
-      })        
-    </script>
-EOD;
+    }
+    $html .= '</tr></tbody></table>';
+    echo $html;
   }
-  
+
   /**
    * http://stackoverflow.com/questions/11987495/linux-proc-loadavg
    *
    */
   function get_metric() {
-    ('/bin/grep -c ^processor /proc/cpuinfo', $resultNumberOfCores);
-    $numberOfCores = $resultNumberOfCores[0];
-  
-    exec(
-      '/bin/cat /proc/loadavg | /usr/bin/awk \'{print $1","$2","$3}\'',
-      $resultLoadAvg
-    );
-    $loadAvg = explode(',', $resultLoadAvg[0]);
+    $number_of_core = intval(`/bin/grep -c processor /proc/cpuinfo`);
+    $loadAvg = `cat /proc/loadavg | /usr/bin/awk '{print $1,$2,$3}'`;
+    $loadAvg = explode(' ', $loadAvg);
+    if ($loadAvg <3) {
+      return false;
+    }
 
-    header('Content-Type: application/json; charset=UTF-8');
-    echo json_encode(
-      array_map(
-        function ($value, $numberOfCores) {
-          return array($value, (int)($value * 100 / $numberOfCores));
-        },
-          $loadAvg,
-          array_fill(0, count($loadAvg), $numberOfCores)
-        )
+    return array_map(
+      function ($value, $number_of_core) {
+        return array($value, (int)($value * 100 / $number_of_core));
+      },
+        $loadAvg,
+        array_fill(0, count($loadAvg), $number_of_core)
       );
 
   }

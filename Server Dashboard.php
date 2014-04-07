@@ -43,7 +43,7 @@ class Dashboard {
 
     $this->_dashboard_widget = array(
       'server',
-      //'cpu_load',
+      'cpuload',
 
       'ram',
       
