@@ -49,8 +49,8 @@ class Dashboard {
       'software',
       'process',
       'ethernet',
-
       'networkio',
+      
       //'diskio',
     );
 

@@ -41,7 +41,8 @@ class Process implements Provider {
    */
   function get_metric() {
     $processes = array();
-    $output = `ps aux | awk '{ print $1,$2,$3,$4,$9,$10,$11 }'`;
+    //$output = `ps aux | awk '{ print $1,$2,$3,$4,$9,$10,$11 }'`;
+    $output = `ps -eo pcpu,pmem,pid,user,args,time,start | sort -k 1 -r | head -30 | awk '{print $4,$3,$1,$2,$7,$6,$5}'`;
     $output = explode("\n", $output);
     if (!is_array($output) || count($output)<2) {
       return false;      
