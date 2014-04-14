@@ -56,7 +56,12 @@ class Process implements Provider {
       }
       //var_dump($line);
       //echo count($line);
-      $processes[] = array_combine(array('user', 'pid', '%cpu', '%mem','start','time', 'command'), $line);
+      if (empty($processes[$line[6]])) {
+        $processes[$line[6]] = array_combine(array('user', 'pid', '%cpu', '%mem','start','time', 'command'), $line);
+      } else {
+        $processes[$line[6]]['%cpu'] += $line[2];
+        $processes[$line[6]]['%mem'] += $line[3];
+      }
     }
 
     return $processes;

@@ -25,7 +25,7 @@ class Networkio implements Provider {
         var data = google.visualization.arrayToDataTable({$data});
 
         var options = {
-          width: 500,
+          //width: 0,
           isStacked: true
         };
 

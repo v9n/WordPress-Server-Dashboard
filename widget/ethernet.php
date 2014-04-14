@@ -38,7 +38,6 @@ class Ethernet implements Provider {
    */
   function get_metric() {
     $ethernet = array();
-
     $output = `ip -oneline link show | /usr/bin/awk \'{print $2}\' | /bin/sed "s/://"`;
     if (!$output) { // It didn't work with "ip" , so we do it with ifconfig
       $output = shell_exec(
@@ -63,7 +62,6 @@ class Ethernet implements Provider {
     if (!$output) {
       return false;
     }
-    
     $lines = explode("\n", $output);
     foreach ($lines as $line) {
       $line = explode(',', $line);

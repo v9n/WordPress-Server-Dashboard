@@ -51,7 +51,7 @@ class Dashboard {
       'ethernet',
       'networkio',
       
-      //'diskio',
+      'iostat',
     );
 
     foreach ($this->_dashboard_widget as $item) {
