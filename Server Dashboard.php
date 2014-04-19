@@ -76,7 +76,7 @@ class Dashboard {
   public function run() {
     add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
     add_action( 'admin_enqueue_scripts', array($this, 'add_asset'));
-    add_action( 'wp_footer', array($this, 'footer'));
+    add_action( 'admin_footer', array($this, 'footer'));
   }
   
   /**
