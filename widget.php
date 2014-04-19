@@ -1,5 +1,6 @@
 <?php
 namespace AX\StatBoard;
+use AX\StatBoard\Widget\Provider;
 
 class Widget {
   const WIDGET_SLUG_PREFIX = 'AX';
@@ -19,7 +20,7 @@ class Widget {
    * @param string widget name
    * @param provider object to handle widget content rendering
    */ 
-  public function add_provider($name, $handler) {
+  public function add_provider($name, Provider $handler) {
     $this->_providers[$name] = $handler;
     return $this;
   }
