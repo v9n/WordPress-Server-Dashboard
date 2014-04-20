@@ -93,9 +93,7 @@ class Dashboard {
    * Assets load: stylesheet, JS. 
    */ 
   function add_asset() {
-    syslog(LOG_DEBUG, "Loaded"); 
     wp_enqueue_script( 'google-chart', 'https://www.google.com/jsapi' );
-    //wp_enqueue_script( 'plugin_dir_url', plugin_dir_url(__FILE__) . '/loader.js');
   }
 
   /**
