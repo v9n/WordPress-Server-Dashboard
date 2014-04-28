@@ -17,6 +17,7 @@ class Dashboard {
   protected static $_instance=NULL;
   protected $_dashboard_widget = array();
   protected $_plugin_dir=NULL;
+  const CAP_METRIC = 'server_metric';
 
   /**
    * Auto load class under namespace of this plugin
@@ -77,14 +78,20 @@ class Dashboard {
     add_action( 'wp_dashboard_setup', array( $this, 'add_dashboard_widgets' ) );
     add_action( 'admin_enqueue_scripts', array($this, 'add_asset'));
     add_action( 'admin_footer', array($this, 'footer'));
+
+    register_activation_hook(__FILE__, array($this, 'add_servermetric_caps'));
+    register_deactivation_hook(__FILE__, array($this, 'remove_servermetric_caps'));
   }
   
   /**
    * Register dashboard widget proider to show up on dashboard
    */
   function add_dashboard_widgets() {
+    if (!current_user_can(self::CAP_METRIC)) {
+      return false;  
+    }
     $widget = Widget::instance();
-    foreach ($widget->get_provider() as $name=>$provider) {
+    foreach ($widget->get_provider() as $name=>$provider) {      
       $widget->register($name);
     }
   }
@@ -104,6 +111,24 @@ class Dashboard {
       <script>google.load("visualization", "1", {packages:["corechart"]})</script>
 ';
   }
+  
+  /**
+   * Add severmetric capability for admin by default
+   */
+  function add_servermetric_caps() {
+    // gets the author role
+    $role = get_role( 'administrator' );
+    // This only works, because it accesses the class instance.
+    // would allow the author to edit others' posts for current theme only
+    $role->add_cap( self::CAP_METRIC ); 
+  }
+
+  function remove_servermetric_caps() {
+    // get_role returns an instance of WP_Role.
+	  $role = get_role( 'administrator' );
+  	$role->remove_cap( self::CAP_METRIC );
+  }
+
 }
 
 Dashboard::instance()->run();
