@@ -25,10 +25,6 @@ EOD;
   
   /**
    * Return server info: OS, Kernel, Uptime, and hostname
-   * @return array with 3 metric:
-   *          * hostname
-   *          * os
-   *          * uptime
    */
   function get_metric() {
     $server = array();

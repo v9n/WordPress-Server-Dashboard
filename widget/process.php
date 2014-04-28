@@ -34,15 +34,11 @@ class Process implements Provider {
   
   /**
    * Return server info: OS, Kernel, Uptime, and hostname
-   * @return array with 3 metric:
-   *          * hostname
-   *          * os
-   *          * uptime
    */
   function get_metric() {
     $processes = array();
     //$output = `ps aux | awk '{ print $1,$2,$3,$4,$9,$10,$11 }'`;
-    $output = `ps -eo pcpu,pmem,pid,user,args,time,start | sort -k 1 -r | head -30 | awk '{print $4,$3,$1,$2,$7,$6,$5}'`;
+    $output = `ps -eo pcpu,pmem,pid,user,args,time,start | grep -v '\[' | sort -k 1 -r | head -30 | awk '{print $4,$3,$1,$2,$7,$6,$5}'`;
     $output = explode("\n", $output);
     if (!is_array($output) || count($output)<2) {
       return false;      

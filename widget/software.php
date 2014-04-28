@@ -20,10 +20,6 @@ class Software implements Provider {
   
   /**
    * Return server info: OS, Kernel, Uptime, and hostname
-   * @return array with 3 metric:
-   *          * hostname
-   *          * os
-   *          * uptime
    */
   function get_metric() {
     $cmds = array();
@@ -48,7 +44,7 @@ class Software implements Provider {
       if (is_array($version)) {
         $version = array_shift($version);
       }
-      $cmds[$cmd] .= '<br>' . $version;
+      $cmds[$cmd] =  $version;
     }
     return $cmds;
   }

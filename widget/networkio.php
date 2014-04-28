@@ -1,8 +1,4 @@
 <?php
-/**
- * Adopt from https://github.com/afaqurk/linux-dash/blob/master/sh/ip.php
- *
- */
 namespace AX\StatBoard\Widget;
 
 class Networkio implements Provider {
@@ -20,13 +16,10 @@ class Networkio implements Provider {
     echo <<<EOD
       <div id="nio_chart"></div>
       <script type="text/javascript">
-      google.load("visualization", "1", {packages:["corechart"]});
       google.setOnLoadCallback(function () {
         var data = google.visualization.arrayToDataTable({$data});
 
         var options = {
-          //width: 0,
-          isStacked: true
         };
 
         var chart = new google.visualization.ColumnChart(document.getElementById('nio_chart'));
@@ -37,33 +30,19 @@ EOD;
 
   }
 
-  /**
-   * Return network IO for each of interface
-   * @return array with 3 metric:
-   *          * hostname
-   *          * os
-   *          * uptime
-   */
+
   function get_metric() {
     $ethernet = array();
     
-    $output = `netstat -i | awk '{print $1","$4","$8}'`;
+    $output = `netstat -i | grep -v -E '(Iface|Interface)' | awk '{print $1","$4","$8}'`;
 
     $lines = explode("\n", $output);
     foreach ($lines as $line) {
       $line = explode(',', $line);
-      if (!is_array($line) || count($line)<3) {
+      if (count($line)<3) {
         continue;
       }
-      //Ignore loopback interface, we don't need it.
-      if (in_array($line[0], array('Kernel', 'Iface', 'lo'))) {
-        continue;
-      }
-      //RX packages
-      $line[1] = intval($line[1]);
-      //TX packages
-      $line[2] = intval($line[2]);
-      $ethernet[] = $line;
+      $ethernet[] = array($line[0], intval($line[1]), intval($line[2]));
     }
     return $ethernet;
   }

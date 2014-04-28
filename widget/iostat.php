@@ -1,8 +1,4 @@
 <?php
-/**
- * Adopt from https://github.com/afaqurk/linux-dash/blob/master/sh/ip.php
- *
- */
 namespace AX\StatBoard\Widget;
 
 class Iostat implements Provider {
@@ -16,7 +12,7 @@ class Iostat implements Provider {
   public function get_content() {
     $metric = $this->get_metric();
     $disk_io = array(
-      array('Disk', 'Read', 'Write'),
+      array('Disk', 'Read(MB)', 'Write(MB)'),
     );
     foreach ($metric['disk'] as $disk=>$stat) {
       $disk_io[] = array($disk, $stat['read'], $stat['write']);
@@ -26,27 +22,26 @@ class Iostat implements Provider {
     $cpu_io = json_encode(array(
       array('CPU Time', 'Percent'),
       array('IO Wait', $metric['cpu']['io_wait']),
-      array('User', $metric['cpu']['user']),
-      array('System', $metric['cpu']['system']),
-      array('Other', $metric['cpu']['other']),
     ));
     
     echo <<<EOD
       <div id="widget_disk_io"></div>
       <div id="widget_cpu_io_wait"></div>
       <script type="text/javascript">
-      google.load("visualization", "1", {packages:["corechart"]});
+      google.load('visualization', '1', {packages:['gauge']});
       google.setOnLoadCallback(function () {
         var data = google.visualization.arrayToDataTable({$cpu_io});
-        var options = {
+        var goptions = {
+          redFrom: 90, redTo: 100,
+          yellowFrom:75, yellowTo: 90,
+          minorTicks: 5
         };
-        var chart = new google.visualization.PieChart(document.getElementById('widget_cpu_io_wait'));
-        chart.draw(data, options);
+        var chart = new google.visualization.Gauge(document.getElementById('widget_cpu_io_wait'));
+        chart.draw(data, goptions);
 
         var data2 = google.visualization.arrayToDataTable({$disk_io});
         var chart2 = new google.visualization.ColumnChart(document.getElementById('widget_disk_io'));
-        chart2.draw(data2, options);
-
+        chart2.draw(data2, {});
       })        
     </script>
 EOD;
@@ -60,13 +55,10 @@ EOD;
    *
    * Return IO Stat information. CPU waiting time, disk read/write
    *
-   * @return array with 3 metric:
-   *          * hostname
-   *          * os
-   *          * uptime
    */
   function get_metric() {
     $metric = array();
+
 
     //Sample return:
     //Linux 2.6.32-358.23.2.el6.x86_64 (vagrant-centos64.vagrantup.com) 	04/10/2014 	_x86_64_	(1 CPU)
@@ -77,6 +69,8 @@ EOD;
     //Device:            tps   Blk_read/s   Blk_wrtn/s   Blk_read   Blk_wrtn
     //sda              13.01      3033.87         9.16   62978242     190192
     $output = `iostat`;
+    $number_of_core = intval(`/bin/grep -c processor /proc/cpuinfo`);
+
     $lines = explode("\n", $output);
     //We should have more than  4 lines
     if (!is_array($lines) || sizeof($lines)<4) {
@@ -84,9 +78,9 @@ EOD;
     }
     $avg_cpu = preg_split("/\s+/", $lines[3]);
     $metric['cpu'] = array(
-      'user'    => floatval($avg_cpu[0]),
-      'system'  => floatval($avg_cpu[2]),
-      'io_wait' => floatval($avg_cpu[3]),
+      'user'    => floatval($avg_cpu[0]) * $number_of_core,
+      'system'  => floatval($avg_cpu[2]) * $number_of_core,
+      'io_wait' => floatval($avg_cpu[3]) * $number_of_core,
       'other'   => 100 - ($avg_cpu[0] + $avg_cpu[2] + $avg_cpu[3])
     );
     
@@ -96,9 +90,12 @@ EOD;
         if (!is_array($line) || sizeof($line)<5) {
           continue;
         }
+        // Calculate block size
+        $block_size = shell_exec("cat /sys/block/{$line[0]}/queue/physical_block_size");
+
         $metric['disk'][$line[0]] = array(
-          'read'  => floatval($line[2]),
-          'write' => floatval($line[3]),
+          'read'  => floatval($line[2]) * $block_size / 1024,
+          'write' => floatval($line[3]) * $block_size / 1024,
         );
 
       }  

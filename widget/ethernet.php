@@ -1,8 +1,4 @@
 <?php
-/**
- * Adopt from https://github.com/afaqurk/linux-dash/blob/master/sh/ip.php
- *
- */
 namespace AX\StatBoard\Widget;
 
 class Ethernet implements Provider {
@@ -29,49 +25,29 @@ class Ethernet implements Provider {
     echo $html;
   }
 
-  /**
-   * Return server info: OS, Kernel, Uptime, and hostname
-   * @return array with 3 metric:
-   *          * hostname
-   *          * os
-   *          * uptime
-   */
   function get_metric() {
     $ethernet = array();
-    $output = `ip -oneline link show | /usr/bin/awk \'{print $2}\' | /bin/sed "s/://"`;
+    $output = shell_exec("ip -oneline link show | awk '{print $2}' | sed 's/://'");
     if (!$output) { // It didn't work with "ip" , so we do it with ifconfig
-      $output = shell_exec(
-        'ifconfig | /bin/grep -B1 "inet addr" | /usr/bin/awk \'' .
-        '{ if ( $1 == "inet" ) { print $2 }' .
-        'else if ( $2 == "Link" ) { printf "%s:",$1 } }\' | /usr/bin/awk' .
-        ' -F: \'{ print $1","$3 }\''
-      );
-    } else {
-      // Loop over the interface we found out with ip to find the Ip 
-      // The output looks like
-      // eth0,10.0.2.15 eth1,192.168.1.111 lo,127.0.0.1 
-      // we need to parse the result
-      $command = "for interface in {$output}; do" .
-        ' for family in inet inet6; do'.
-        ' ip -oneline -family $family addr show $interface |' .
-        ' grep -v fe80 | awk \'{print $2","$4}\';' .
-        ' done; done';
-      $output = shell_exec($command);
+      $output = `ifconfig | grep "Link encap" | awk '{ print $1 }'`;
+      $interfaces = explode("\n", $output);
+      $output = `ifconfig | grep "inet addr" | awk '{ print $2 }' | sed 's/addr://'`;
+      $addreses = explode("\n", $output);
+      $output = trim($output, " \n");
+      return array_combine($interfaces, $addreses);
     }
-
-    if (!$output) {
-      return false;
+    // Loop over the interface we found out with ip to find the Ip 
+    // The output looks like
+    // eth0,10.0.2.15 eth1,192.168.1.111 lo,127.0.0.1 
+    // we need to parse the result
+    $output = trim($output, " \n");
+    $interfaces = explode("\n", $output);
+    $addreses = array();
+    foreach ($interfaces as $interface) {
+      $output = shell_exec("ip -oneline -family inet addr show $interface | awk '{print $4}' | cut -d'/' -f1");
+      $addreses[] = $output;
     }
-    $lines = explode("\n", $output);
-    foreach ($lines as $line) {
-      $line = explode(',', $line);
-      if (!is_array($line) || count($line)<2) {
-        continue;
-      }
-      $ethernet[$line[0]] = $line[1];
-    }
-
-    return $ethernet;
+    return array_combine($interfaces, $addreses);
   }
 
 }

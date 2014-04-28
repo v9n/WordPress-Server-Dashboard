@@ -14,20 +14,33 @@ class Cpuload implements Provider {
     if (!$metrics) {
       return false;
     }
-    $html = '<table class="wp-list-table widefat"><thead><tr>
-      <th>1 min</th>
-      <th>5 min</th>
-      <th>15 min</th>
-      </tr></thead><tbody><tr>
-';
-    foreach ($metrics as $metric) {
-      $html .= '<td>';
-      $html .= "{$metric[0]}%<br>{$metric[1]}";
-      $html .= '</td>';
-
+    // see https://google-developers.appspot.com/chart/interactive/docs/gallery/barchart#Data_Format for more detai of format
+    $data = array(array('Duration', '% Load'));
+    foreach ($metrics as $key=>$metric) {
+      array_push($data, array($metric[0], $metric[1]));
     }
-    $html .= '</tr></tbody></table>';
-    echo $html;
+    $data = json_encode($data);
+    echo <<<EOD
+<div id="avg_load"></div>
+<script type="text/javascript">
+      google.load("visualization", "1", {packages:["corechart"]});
+      google.setOnLoadCallback(drawChart);
+      function drawChart() {
+        var data = google.visualization.arrayToDataTable($data);
+
+        var options = {    
+          hAxis: {
+            titleTextStyle: {color: 'red'},
+            minValue:0,
+            maxValue:100
+          }
+        };
+
+        var chart = new google.visualization.BarChart(document.getElementById('avg_load'));
+        chart.draw(data, options);
+      }
+    </script>
+EOD;
   }
 
   /**
@@ -41,13 +54,14 @@ class Cpuload implements Provider {
     if ($loadAvg <3) {
       return false;
     }
-
+    $loadTimes = array('1 min', '5 mins', '15 mins');
     return array_map(
-      function ($value, $number_of_core) {
-        return array($value, (int)($value * 100 / $number_of_core));
+      function ($loadtime, $value, $number_of_core) {
+        return array($loadtime, round($value * 100 / $number_of_core, 2), $value);
       },
+        $loadTimes,
         $loadAvg,
-        array_fill(0, count($loadAvg), $number_of_core)
+        array_fill(0, 3, $number_of_core)
       );
 
   }

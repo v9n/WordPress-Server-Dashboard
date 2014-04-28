@@ -72,7 +72,7 @@ EOD;
           return NULL;
         }
         $segment=preg_split('/\s+/', $line);
-
+        
         return array(
           'filesystem' => $segment[0],
           'size' => $segment[1],
