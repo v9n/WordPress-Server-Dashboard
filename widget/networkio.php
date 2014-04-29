@@ -10,7 +10,7 @@ class Networkio implements Provider {
   }
 
   public function get_content() {
-    $interfaces = Cache::load($this, 3600 * 5);
+    $interfaces = Cache::load($this, 300);
 
     $data = array_merge(array(array('Interface', 'Receive(package)', 'Transfer(package)')), $interfaces);
     $data = json_encode($data); 

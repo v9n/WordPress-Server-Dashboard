@@ -10,7 +10,7 @@ class Ethernet implements Provider {
   }
 
   public function get_content() {
-    $interfaces = Cache::load($this, 3600 * 24);
+    $interfaces = Cache::load($this, 300);
 
     $html = '<table class="wp-list-table widefat"><thead><tr>
       <th>Interface</th>

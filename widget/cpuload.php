@@ -11,7 +11,7 @@ class Cpuload implements Provider {
 
   public function get_content() {
     $metrics = $this->get_metric();
-    $metrics = Cache::load($this, 3600 * 5); //5 minute cache
+    $metrics = Cache::load($this, 300 ); //5 minute cache
     if (!$metrics) {
       return false;
     }

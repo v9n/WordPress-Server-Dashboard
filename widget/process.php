@@ -12,6 +12,7 @@ class Process implements Provider {
 
   public function get_content() {
     $processes = $this->get_metric();
+    $processes = Cache::load($this, 180); //3 minutes
     $html = '<table class="wp-list-table widefat"><thead><tr>
       <th>User</th>
       <th>Pid</th>

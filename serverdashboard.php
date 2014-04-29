@@ -12,6 +12,7 @@ Domain Path: /languages
 namespace AX\StatBoard;
 
 use AX\StatBoard\Widget;
+use AX\StatBoard\Widget\Cache;
 
 class Dashboard {
   protected static $_instance=NULL;
@@ -81,6 +82,11 @@ class Dashboard {
 
     register_activation_hook(__FILE__, array($this, 'add_servermetric_caps'));
     register_deactivation_hook(__FILE__, array($this, 'remove_servermetric_caps'));
+
+    add_filter( 'cron_schedules', array($this, 'cron_3min') ); 
+    add_action( 'metric_generate_every_3min', array($this, 'generate_metric') );
+    add_action( 'init', array($this, 'setup_schedule') );
+
   }
   
   /**
@@ -127,6 +133,44 @@ class Dashboard {
     // get_role returns an instance of WP_Role.
 	  $role = get_role( 'administrator' );
   	$role->remove_cap( self::CAP_METRIC );
+  }
+
+
+  /**
+   * Define a new kind of interval
+   * https://codex.wordpress.org/Function_Reference/wp_get_schedules
+   */
+  function cron_3min($schedules) {
+    $schedules['3min'] = array(
+        'interval' => 3 * 60,
+        'display' => __( 'Once every 3 minutes' )
+    );
+    return $schedules;
+  }
+
+  /**
+   * Setup schedule for event. If the schedule isn't exist, 
+   * we register it to 
+   */
+  function setup_schedule() {
+    if ( ! wp_next_scheduled( 'metric_generate_every_3min' ) ) {
+		  wp_schedule_event( time(), '3min', 'metric_generate_every_3min');
+	  }
+
+  }
+
+  /**
+   * The main function that runs on cron and
+   * generate data
+   */
+  function generate_metric() {
+    $widget = Widget::instance();
+    file_put_contents('/tmp/d', 'Run at ' . time() . "\n\n", FILE_APPEND);
+    foreach ($widget->get_provider() as $name=>$provider) {      
+      //By calling get_content, we trigger Cache::load process.
+      $provider->get_content();
+    }
+    file_put_contents('/tmp/d', 'Finished at ' . time() . "\n\n", FILE_APPEND);
   }
 
 }

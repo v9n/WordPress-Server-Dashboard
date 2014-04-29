@@ -11,7 +11,7 @@ class Ram implements Provider {
 
   public function get_content() {
     $metric = $this->get_metric();
-    $metric = Cache::load($metric, 3600 * 5);
+    $metric = Cache::load($this, 300);
     $data = array(
       array('Type', 'Used(MB)', 'Free(MB)')
     );

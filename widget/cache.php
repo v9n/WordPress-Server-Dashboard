@@ -30,7 +30,7 @@ class Cache {
    * put into cache.
    *
    */
-  static function load(Provider $provider, $cache_time) {
+  static function load(Provider $provider, $cache_time = 300) {
     if (false !== $data = static::get($provider))  {
       return $data;
     }
