@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: Server Dashboard
-Version: 0.1-alpha
+Version: 1.0
 Description: Server Status Dashboard
 Author: Vinh
 Author URI: http://axcoto.com
