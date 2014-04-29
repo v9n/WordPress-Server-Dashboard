@@ -3,9 +3,13 @@ namespace AX\StatBoard\Widget;
 use DateTime;
 
 class Server implements Provider {
+  protected $cache_id   = NULL;
+  protected $cache_time = 3600;
   function __construct() {
+    $this->cache_id   = __NAMESPACE__ . __CLASS__;
+    $this->cache_time = 3600 * 24; //one day
   }
-
+  
   public function get_title() {
     return "Server Info";
   }
@@ -28,6 +32,11 @@ EOD;
    */
   function get_metric() {
     $server = array();
+    if (false !== $server = get_transient($this->cache_id)) {
+      echo 'cache server';
+      return $server;
+    }
+
     $server['hostname'] = `hostname`;
     $server['os']       = `uname -sr`;
     $server['core']     = `grep -c ^processor /proc/cpuinfo`;
@@ -41,7 +50,8 @@ EOD;
     $server['ip'] = `curl ifconfig.me`;
     $server['ram'] = `free -m | grep Mem | awk '{print $2}'`;
     $server['cpu'] =`cat /proc/cpuinfo | grep "model name" | awk '{print $4,$5,$6,$7}'`;
-
+    
+    set_transient($this->cache_id, $server, $this->cache_time);
     return $server;
   }
 
