@@ -3,6 +3,7 @@ namespace AX\StatBoard\Widget;
 
 class Software implements Provider {
   function __construct() {
+
   }
 
   public function get_title() {
@@ -10,7 +11,8 @@ class Software implements Provider {
   }
 
   public function get_content() {
-    $cmds = $this->get_metric();
+    $cmds = Cache::load($this, 3600 * 24);
+
     $content = '';
     foreach ($cmds as $cmd=>$info) {
       $content .= "<p><strong>$cmd</strong>&nbsp; $info</p>";

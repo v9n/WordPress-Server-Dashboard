@@ -10,7 +10,8 @@ class Ethernet implements Provider {
   }
 
   public function get_content() {
-    $interfaces = $this->get_metric();
+    $interfaces = Cache::load($this, 3600 * 24);
+
     $html = '<table class="wp-list-table widefat"><thead><tr>
       <th>Interface</th>
       <th>IP</th>
@@ -26,7 +27,6 @@ class Ethernet implements Provider {
   }
 
   function get_metric() {
-    $ethernet = array();
     $output = shell_exec("ip -oneline link show | awk '{print $2}' | sed 's/://'");
     if (!$output) { // It didn't work with "ip" , so we do it with ifconfig
       $output = `ifconfig | grep "Link encap" | awk '{ print $1 }'`;
@@ -47,6 +47,7 @@ class Ethernet implements Provider {
       $output = shell_exec("ip -oneline -family inet addr show $interface | awk '{print $4}' | cut -d'/' -f1");
       $addreses[] = $output;
     }
+    
     return array_combine($interfaces, $addreses);
   }
 
