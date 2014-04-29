@@ -10,7 +10,8 @@ class Networkio implements Provider {
   }
 
   public function get_content() {
-    $interfaces = $this->get_metric();
+    $interfaces = Cache::load($this, 3600 * 5);
+
     $data = array_merge(array(array('Interface', 'Receive(package)', 'Transfer(package)')), $interfaces);
     $data = json_encode($data); 
     echo <<<EOD

@@ -7,7 +7,9 @@ class Cache {
    * Get cache for a particular widget
    */
   static function get(Provider $provider) {
-    echo 'saved';
+    if (isset($_GET['nocache'])) {
+      return false;
+    }
     $cache_id = get_class($provider);
     if (false !== $data = get_transient($cache_id)) {
       return $data;
@@ -20,7 +22,6 @@ class Cache {
    */
   static function set(Provider $provider, $value, $cache_time = 300) {
     $cache_id = get_class($provider);
-    echo 'set';
     set_transient($cache_id, $value, $cache_time);
   }
   
@@ -30,7 +31,7 @@ class Cache {
    *
    */
   static function load(Provider $provider, $cache_time) {
-    if (false !== $data = static::get($provider)) {
+    if (false !== $data = static::get($provider))  {
       return $data;
     }
     //no data yet, let's pull it and put it into cache

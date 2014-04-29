@@ -10,6 +10,7 @@ class Disk implements Provider {
 
   public function get_content() {
     $metric = $this->get_metric();
+    $metric = Cache::load($this, 60 * 10); //Cache disk usage for 10 minutes
     $data = array(
       array('Disk', 'Space')
     );

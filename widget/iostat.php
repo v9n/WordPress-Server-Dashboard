@@ -11,6 +11,8 @@ class Iostat implements Provider {
 
   public function get_content() {
     $metric = $this->get_metric();
+    $metric = Cache::load($this, 3600 * 5); //5 minute cache for disk io
+
     $disk_io = array(
       array('Disk', 'Read(MB)', 'Write(MB)'),
     );
